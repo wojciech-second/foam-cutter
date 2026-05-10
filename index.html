@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Foam Cutter</title>
+    <link rel="stylesheet" href="/src/ui/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside id="sidebar">
+        <header>
+          <h1>Foam Cutter</h1>
+          <p class="subtitle">4-axis hot-wire CAM &amp; simulator</p>
+        </header>
+
+        <section class="panel">
+          <h2>Profiles</h2>
+          <label class="file-row">
+            <span>Root .dat</span>
+            <input type="file" id="root-file" accept=".dat,.txt,text/plain" />
+            <span class="filename" id="root-name">—</span>
+          </label>
+          <label class="file-row">
+            <span>Tip .dat</span>
+            <input type="file" id="tip-file" accept=".dat,.txt,text/plain" />
+            <span class="filename" id="tip-name">—</span>
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>Geometry</h2>
+          <div class="grid">
+            <label>Root chord (mm)<input type="number" id="root-chord" value="200" min="10" step="1" /></label>
+            <label>Tip chord (mm)<input type="number" id="tip-chord" value="150" min="10" step="1" /></label>
+            <label>Span (mm)<input type="number" id="span" value="600" min="50" step="10" /></label>
+            <label>Sweep (mm)<input type="number" id="sweep" value="0" step="1" /></label>
+            <label>Washout (°)<input type="number" id="washout" value="0" step="0.25" /></label>
+            <label>Alignment
+              <select id="alignment">
+                <option value="le">Leading edge</option>
+                <option value="qc" selected>Quarter chord</option>
+                <option value="te">Trailing edge</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Foam block</h2>
+          <div class="grid">
+            <label>Length X (mm)<input type="number" id="block-x" value="260" min="10" step="1" /></label>
+            <label>Height Y (mm)<input type="number" id="block-y" value="80"  min="5"  step="1" /></label>
+            <label>Width Z (mm)<input type="number" id="block-z" value="600" min="50" step="10" /></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Cut</h2>
+          <div class="grid">
+            <label>Resample N<input type="number" id="resample-n" value="240" min="40" step="10" /></label>
+            <label>Kerf (mm)<input type="number" id="kerf" value="0.8" min="0" step="0.05" /></label>
+            <label>Feed (mm/s)<input type="number" id="feed" value="6" min="0.5" step="0.5" /></label>
+            <label>Lead-in (mm)<input type="number" id="leadin" value="20" min="0" step="1" /></label>
+          </div>
+        </section>
+
+        <section class="panel" id="status-panel">
+          <h2>Status</h2>
+          <div id="status" class="status">Load root and tip .dat to begin.</div>
+        </section>
+      </aside>
+
+      <main id="viewport">
+        <div id="canvas-host"></div>
+        <div id="hud">
+          <div id="hud-left">
+            <button id="play-btn" type="button">▶ Play</button>
+            <button id="reset-btn" type="button">⟲ Reset</button>
+            <span id="time-readout">0.00 s / 0.00 s</span>
+          </div>
+          <div id="hud-right">
+            <input type="range" id="scrub" min="0" max="1000" value="0" step="1" />
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
