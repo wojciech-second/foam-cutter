@@ -1,6 +1,6 @@
 import { parseDat, profileSummary, type Profile } from './airfoil/parser.ts';
 import { buildToolpath, type Toolpath } from './cam/toolpath.ts';
-import type { Alignment } from './airfoil/transform.ts';
+import type { Alignment, PairingMode } from './airfoil/transform.ts';
 import {
   initScene,
   setBlock,
@@ -42,6 +42,7 @@ function readInputs(): {
   sweep: number;
   washoutDeg: number;
   alignment: Alignment;
+  pairing: PairingMode;
   blockX: number;
   blockY: number;
   blockZ: number;
@@ -59,6 +60,7 @@ function readInputs(): {
     sweep: num('sweep'),
     washoutDeg: num('washout'),
     alignment: sel('alignment') as Alignment,
+    pairing: sel('pairing') as PairingMode,
     blockX: num('block-x'),
     blockY: num('block-y'),
     blockZ: num('block-z'),
@@ -88,6 +90,7 @@ function rebuild(state: AppState): void {
       sweep: cfg.sweep,
       washoutDeg: cfg.washoutDeg,
       alignment: cfg.alignment,
+      pairing: cfg.pairing,
       kerf: cfg.kerf,
       resampleN: cfg.resampleN,
       leadInMm: cfg.leadIn,
@@ -185,7 +188,7 @@ function wireUI(state: AppState): void {
 
   // Numeric/select inputs trigger a rebuild on change.
   const reactiveIds = [
-    'root-chord', 'tip-chord', 'span', 'sweep', 'washout', 'alignment',
+    'root-chord', 'tip-chord', 'span', 'sweep', 'washout', 'alignment', 'pairing',
     'block-x', 'block-y', 'block-z', 'resample-n', 'kerf', 'feed', 'leadin',
   ];
   for (const id of reactiveIds) {

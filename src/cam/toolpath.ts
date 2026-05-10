@@ -1,9 +1,13 @@
 import type { Vec2 } from '../geom/vec.ts';
 import type { Profile } from '../airfoil/parser.ts';
-import type { Alignment, PlacedProfile } from '../airfoil/transform.ts';
+import type {
+  Alignment,
+  PairingMode,
+  PlacedProfile,
+} from '../airfoil/transform.ts';
 import {
-  placeProfile,
-  resampleByArcLength,
+  placePoints,
+  resampleProfile,
   offsetOutward,
 } from '../airfoil/transform.ts';
 
@@ -14,9 +18,11 @@ export interface ToolpathOpts {
   sweep: number;
   washoutDeg: number;
   alignment: Alignment;
+  /** How root and tip are paired across the wire. */
+  pairing: PairingMode;
   /** Outward kerf compensation per side (mm). */
   kerf: number;
-  /** How many points per profile after arc-length resampling. */
+  /** How many points per profile after resampling. */
   resampleN: number;
   /** Lead-in / lead-out length in chord (+X) direction (mm). */
   leadInMm: number;
@@ -58,26 +64,38 @@ export function buildToolpath(
 ): Toolpath {
   const washoutRad = opts.washoutDeg * DEG2RAD;
 
-  const rootPlaced = placeProfile(root, {
+  // 1) Resample each NORMALIZED profile to a common N using the chosen
+  //    pairing mode. Doing this in normalized space (chord = 1) makes
+  //    chord-fraction pairing meaningful: it stays meaningful even after
+  //    washout rotates the placed coordinates.
+  const rootNorm = resampleProfile(root.points, opts.resampleN, opts.pairing);
+  const tipNorm = resampleProfile(tip.points, opts.resampleN, opts.pairing);
+
+  // 2) Place each station: scale → align → washout → sweep.
+  const rootPts = placePoints(rootNorm, {
     chord: opts.rootChord,
     alignment: opts.alignment,
     washoutRad: 0,
     sweep: 0,
   });
-  const tipPlaced = placeProfile(tip, {
+  const tipPts = placePoints(tipNorm, {
     chord: opts.tipChord,
     alignment: opts.alignment,
     washoutRad,
     sweep: opts.sweep,
   });
 
-  // Arc-length resample to a common N so pairing is index-by-index.
-  const rootRS = resampleByArcLength(rootPlaced.points, opts.resampleN);
-  const tipRS = resampleByArcLength(tipPlaced.points, opts.resampleN);
+  // PlacedProfile wrappers for status/diagnostics.
+  const rootPlaced: PlacedProfile = {
+    points: rootPts, pivot: { x: 0, y: 0 }, name: root.name,
+  };
+  const tipPlaced: PlacedProfile = {
+    points: tipPts, pivot: { x: 0, y: 0 }, name: tip.name,
+  };
 
-  // Outward kerf offset on each tower path.
-  const rootK = offsetOutward(rootRS, opts.kerf);
-  const tipK = offsetOutward(tipRS, opts.kerf);
+  // 3) Outward kerf offset on each tower path.
+  const rootK = offsetOutward(rootPts, opts.kerf);
+  const tipK = offsetOutward(tipPts, opts.kerf);
 
   // Lead-in / lead-out: straight horizontal entry/exit from +X side at the
   // first profile point (which is TE for Selig-ordered .dat files).
